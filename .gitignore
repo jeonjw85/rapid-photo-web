@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+data/
+.omo/
+.superpowers/
+__pycache__/
+*.pyc
+.DS_Store
