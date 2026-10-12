@@ -1,0 +1,33 @@
+services:
+  rapid-photo-web:
+    image: ${IMAGE:-rapid-photo-web:local}
+    build:
+      context: .
+      args:
+        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.0}
+    ports:
+      - "${WEB_PORT:-5800}:5800"
+    environment:
+      USER_ID: "${USER_ID:-1000}"
+      GROUP_ID: "${GROUP_ID:-1000}"
+      TZ: ${TZ:-Etc/UTC}
+      LANG: ${LANG:-en_US.UTF-8}
+      DISPLAY_WIDTH: "${DISPLAY_WIDTH:-1920}"
+      DISPLAY_HEIGHT: "${DISPLAY_HEIGHT:-1080}"
+      UMASK: "${UMASK:-0022}"
+    volumes:
+      - type: bind
+        source: ${CONFIG_DIR:-./data/config}
+        target: /config
+      - type: bind
+        source: ${INPUT_DIR:-./data/input}
+        target: /input
+        read_only: true
+      - type: bind
+        source: ${UPLOADS_DIR:-./data/uploads}
+        target: /uploads
+      - type: bind
+        source: ${OUTPUT_DIR:-./data/output}
+        target: /output
+    shm_size: 512m
+    restart: unless-stopped
