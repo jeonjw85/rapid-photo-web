@@ -27,6 +27,7 @@ RUN for account in messagebus systemd-network; do \
     done
 
 COPY rootfs/ /
+COPY LICENSE /usr/share/doc/rapid-photo-web/LICENSE
 
 RUN chmod 755 /startapp.sh \
     /etc/cont-init.d/90-rapid-photo-web.sh \
