@@ -1,5 +1,9 @@
 # rapid-photo-web
 
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-0.1.0-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
+[![Docker Pulls](https://img.shields.io/docker/pulls/jeonjw/rapid-photo-web)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 [English](README.md)
 
 [Rapid Photo Downloader](https://damonlynch.net/rapid/)를 브라우저에서 쓰기 위한 Ubuntu 기반 단일 앱 컨테이너
