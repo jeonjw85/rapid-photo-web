@@ -100,10 +100,11 @@ class Container:
     def close(self):
         docker("rm", "-fv", self.name, check=False)
         # The image creates app-owned files; remove only this test's directory.
+        # Clear sticky bits so the host user can remove root/app-owned children.
         docker(
             "run", "--rm", "--pull=never", "--platform", self.platform,
             "--entrypoint", "/bin/sh", "-v", f"{self.root}:/test-data",
-            self.image, "-c", "chmod -R a+rwX /test-data", check=False,
+            self.image, "-c", "chmod -R a+rwX,a-t /test-data", check=False,
         )
         self.temp.cleanup()
 
@@ -140,6 +141,7 @@ class RuntimeTests(ImageTests):
         """Starting the image must not reset an existing user's destination."""
         c = self.container()
         (c.root / "output" / "custom photos").mkdir(mode=0o777)
+        (c.root / "output" / "custom photos").chmod(0o777)
         c.seed_settings(
             "[Device]\ndevice_autodetection=false\nthis_computer_source=true\n"
             "this_computer_path=/input\n[Rename]\n"
@@ -165,6 +167,7 @@ class RuntimeTests(ImageTests):
         for kind in ("photos", "videos"):
             (c.root / "output" / kind).write_text("Existing unrelated file")
             (c.root / "output" / ("custom " + kind)).mkdir(mode=0o777)
+            (c.root / "output" / ("custom " + kind)).chmod(0o777)
         c.seed_settings(
             "[Device]\ndevice_autodetection=false\nthis_computer_source=true\n"
             "this_computer_path=/input\n[Rename]\n"
