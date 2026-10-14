@@ -1,6 +1,6 @@
 # rapid-photo-web
 
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-0.1.0-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-latest-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jeonjw/rapid-photo-web)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -12,24 +12,24 @@
 
 ## 실행
 
-Docker와 Compose 필요
+Docker와 Compose 필요. 제공 이미지: `linux/arm64`
 
 ```sh
 cp .env.example .env
 mkdir -p data/config data/input data/uploads data/output
 ```
 
-Linux/NAS에서는 `.env`의 `USER_ID`, `GROUP_ID`를 폴더 소유자에 맞춰 설정 (`id -u`, `id -g`로 현재 계정 ID 확인)
+`.env`에 `IMAGE=jeonjw/rapid-photo-web:latest` 설정. Linux/NAS에서는 `USER_ID`, `GROUP_ID`를 폴더 소유자에 맞춰 설정 (`id -u`, `id -g`로 확인)
 
 설정, 업로드, 출력 폴더는 해당 계정의 쓰기 권한 필요
 
 ```sh
-docker compose up -d --build
+docker compose up -d --pull always --no-build
 ```
 
 접속 주소는 http://localhost:5800 또는 `http://서버주소:5800`
 
-게시된 이미지 사용 시 `.env`에 `IMAGE=jeonjw/rapid-photo-web:0.1.0` 지정 후 `docker compose pull`, `docker compose up -d --no-build` 실행
+업데이트도 같은 명령으로 최신 릴리스 적용
 
 ## 사진 가져오기
 
@@ -66,55 +66,7 @@ Docker Desktop에서는 공유된 호스트 경로 사용, 카드 교체나 마�
 
 HTTPS와 웹 로그인은 [베이스 이미지 설정](https://github.com/jlesage/docker-baseimage-gui#security)을 참고해 `compose.yaml`에 환경변수 추가
 
-## Docker Hub 게시
-
-ARM64 사진 가져오기 검증 완료
-
-AMD64는 빌드 가능하나 OrbStack 에뮬레이션에서 가져오기 중 멈춤 발생, 실제 x86_64 환경의 사진 가져오기는 추가 검증 대상
-
-### GitHub Actions
-
-[Docker 워크플로우](.github/workflows/docker.yml)는 네이티브 ARM64 러너에서 실행
-
-- `main` 대상 PR과 `main` 푸시: 이미지 빌드 후 전체 스모크 테스트 실행
-- `v0.1.1` 같은 `vMAJOR.MINOR.PATCH` 태그 푸시: 빌드·테스트 후 검증한 이미지를 `jeonjw/rapid-photo-web:0.1.1`과 `jeonjw/rapid-photo-web:latest`로 게시
-
-저장소의 **Settings → Secrets and variables → Actions**에 Repository secrets 등록
-
-| Secret | 값 |
-| --- | --- |
-| `DOCKERHUB_USERNAME` | `jeonjw` |
-| `DOCKERHUB_TOKEN` | `jeonjw/rapid-photo-web`에 Read & Write 권한이 있는 Docker Hub 액세스 토큰 |
-
-워크플로우를 커밋·푸시한 후 새 릴리스 태그를 생성하고 푸시
-
-```sh
-git tag v0.1.1
-git push origin v0.1.1
-```
-
-`latest`는 가장 최근에 게시된 릴리스를 가리키며, 전체 스모크 테스트 통과 후 이미지 게시
-
-### 수동 게시
-
-```sh
-docker login
-export DOCKERHUB_USERNAME=jeonjw
-export VERSION=0.1.0
-
-docker buildx build \
-  --platform linux/arm64 \
-  --build-arg IMAGE_VERSION="$VERSION" \
-  -t "$DOCKERHUB_USERNAME/rapid-photo-web:$VERSION" \
-  -t "$DOCKERHUB_USERNAME/rapid-photo-web:latest" \
-  --push .
-```
-
-실제 AMD64 검증 후 [멀티플랫폼 빌더](https://docs.docker.com/build/building/multi-platform/)에서 `--platform linux/amd64,linux/arm64`로 두 아키텍처 게시 가능
-
-`VERSION`은 앱 버전과 별개인 컨테이너 버전
-
-## 테스트
+## 개발
 
 Python 3.9 이상과 Docker 필요
 
@@ -122,6 +74,8 @@ Python 3.9 이상과 Docker 필요
 docker build --platform linux/arm64 -t rapid-photo-web:test .
 python3 tests/smoke.py --image rapid-photo-web:test --platform linux/arm64 --suite all
 ```
+
+`main` 대상 PR과 `main` 푸시에서 [빌드·테스트](.github/workflows/docker.yml) 실행. `vMAJOR.MINOR.PATCH` 태그 푸시 시 테스트를 통과한 이미지를 버전 태그와 `latest`로 게시
 
 ## 라이선스
 

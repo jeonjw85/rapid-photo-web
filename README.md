@@ -1,6 +1,6 @@
 # rapid-photo-web
 
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-0.1.0-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-latest-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jeonjw/rapid-photo-web)](https://hub.docker.com/r/jeonjw/rapid-photo-web)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -12,22 +12,22 @@ One shared GUI session per container, with persistent settings, browser file tra
 
 ## Run
 
-Requires Docker with Compose
+Requires Docker with Compose. Published image: `linux/arm64`
 
 ```sh
 cp .env.example .env
 mkdir -p data/config data/input data/uploads data/output
 ```
 
-On Linux/NAS, set `USER_ID` and `GROUP_ID` in `.env` to match the folder owner (`id -u`, `id -g`). Config, uploads and output must be writable by that user
+Set `IMAGE=jeonjw/rapid-photo-web:latest` in `.env`. On Linux/NAS, match `USER_ID` and `GROUP_ID` to the folder owner (`id -u`, `id -g`). Config, uploads and output must be writable by that user
 
 ```sh
-docker compose up -d --build
+docker compose up -d --pull always --no-build
 ```
 
 Open http://localhost:5800, or use your server's address
 
-For a published image, set `IMAGE=jeonjw/rapid-photo-web:0.1.0` in `.env`, then run `docker compose pull` and `docker compose up -d --no-build`
+Run the same command to update to the latest release
 
 ## Import photos
 
@@ -56,53 +56,7 @@ Settings and files survive container recreation when the host folders are kept. 
 
 For HTTPS and web login, follow the [base image configuration](https://github.com/jlesage/docker-baseimage-gui#security) and add the variables to `compose.yaml`
 
-## Publish
-
-ARM64 photo imports have been tested. AMD64 builds, but imports stall under OrbStack emulation; native x86_64 import testing is still pending
-
-### GitHub Actions
-
-The [Docker workflow](.github/workflows/docker.yml) uses a native ARM64 runner:
-
-- Pull requests to `main` and pushes to `main`: build the image and run the full smoke suite
-- Push a `vMAJOR.MINOR.PATCH` tag, such as `v0.1.1`: build and test, then publish the tested image as `jeonjw/rapid-photo-web:0.1.1` and `jeonjw/rapid-photo-web:latest`
-
-Add repository secrets under **Settings → Secrets and variables → Actions**:
-
-| Secret | Value |
-| --- | --- |
-| `DOCKERHUB_USERNAME` | `jeonjw` |
-| `DOCKERHUB_TOKEN` | Docker Hub access token with Read & Write access to `jeonjw/rapid-photo-web` |
-
-Once the workflow is committed and pushed, create and push a new release tag:
-
-```sh
-git tag v0.1.1
-git push origin v0.1.1
-```
-
-`latest` tracks the most recently published release. Image publishing runs only after all smoke tests pass
-
-### Manual publishing
-
-```sh
-docker login
-export DOCKERHUB_USERNAME=jeonjw
-export VERSION=0.1.0
-
-docker buildx build \
-  --platform linux/arm64 \
-  --build-arg IMAGE_VERSION="$VERSION" \
-  -t "$DOCKERHUB_USERNAME/rapid-photo-web:$VERSION" \
-  -t "$DOCKERHUB_USERNAME/rapid-photo-web:latest" \
-  --push .
-```
-
-After native AMD64 verification, use `--platform linux/amd64,linux/arm64` with a [multi-platform builder](https://docs.docker.com/build/building/multi-platform/)
-
-`VERSION` is the container version, separate from the app's version
-
-## Test
+## Development
 
 Requires Python 3.9+ and Docker
 
@@ -110,6 +64,8 @@ Requires Python 3.9+ and Docker
 docker build --platform linux/arm64 -t rapid-photo-web:test .
 python3 tests/smoke.py --image rapid-photo-web:test --platform linux/arm64 --suite all
 ```
+
+The [Docker workflow](.github/workflows/docker.yml) builds and tests PRs to `main` and pushes to `main`. Pushing a `vMAJOR.MINOR.PATCH` tag publishes the tested image under its version and `latest`
 
 ## License
 
