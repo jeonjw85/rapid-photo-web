@@ -27,7 +27,7 @@ docker compose up -d --build
 
 Open http://localhost:5800, or use your server's address
 
-For a published image, set `IMAGE=your-dockerhub-id/rapid-photo-web:0.1.0` in `.env`, then run `docker compose pull` and `docker compose up -d --no-build`
+For a published image, set `IMAGE=jeonjw/rapid-photo-web:0.1.0` in `.env`, then run `docker compose pull` and `docker compose up -d --no-build`
 
 ## Import photos
 
@@ -60,9 +60,34 @@ For HTTPS and web login, follow the [base image configuration](https://github.co
 
 ARM64 photo imports have been tested. AMD64 builds, but imports stall under OrbStack emulation; native x86_64 import testing is still pending
 
+### GitHub Actions
+
+The [Docker workflow](.github/workflows/docker.yml) uses a native ARM64 runner:
+
+- Pull requests to `main` and pushes to `main`: build the image and run the full smoke suite
+- Push a `vMAJOR.MINOR.PATCH` tag, such as `v0.1.1`: build and test, then publish the tested image as `jeonjw/rapid-photo-web:0.1.1` and `jeonjw/rapid-photo-web:latest`
+
+Add repository secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | `jeonjw` |
+| `DOCKERHUB_TOKEN` | Docker Hub access token with Read & Write access to `jeonjw/rapid-photo-web` |
+
+Once the workflow is committed and pushed, create and push a new release tag:
+
+```sh
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+`latest` tracks the most recently published release. Image publishing runs only after all smoke tests pass
+
+### Manual publishing
+
 ```sh
 docker login
-export DOCKERHUB_USERNAME=your-dockerhub-id
+export DOCKERHUB_USERNAME=jeonjw
 export VERSION=0.1.0
 
 docker buildx build \

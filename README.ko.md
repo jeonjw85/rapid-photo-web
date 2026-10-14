@@ -29,7 +29,7 @@ docker compose up -d --build
 
 접속 주소는 http://localhost:5800 또는 `http://서버주소:5800`
 
-게시된 이미지 사용 시 `.env`에 `IMAGE=계정명/rapid-photo-web:0.1.0` 지정 후 `docker compose pull`, `docker compose up -d --no-build` 실행
+게시된 이미지 사용 시 `.env`에 `IMAGE=jeonjw/rapid-photo-web:0.1.0` 지정 후 `docker compose pull`, `docker compose up -d --no-build` 실행
 
 ## 사진 가져오기
 
@@ -72,9 +72,34 @@ ARM64 사진 가져오기 검증 완료
 
 AMD64는 빌드 가능하나 OrbStack 에뮬레이션에서 가져오기 중 멈춤 발생, 실제 x86_64 환경의 사진 가져오기는 추가 검증 대상
 
+### GitHub Actions
+
+[Docker 워크플로우](.github/workflows/docker.yml)는 네이티브 ARM64 러너에서 실행
+
+- `main` 대상 PR과 `main` 푸시: 이미지 빌드 후 전체 스모크 테스트 실행
+- `v0.1.1` 같은 `vMAJOR.MINOR.PATCH` 태그 푸시: 빌드·테스트 후 검증한 이미지를 `jeonjw/rapid-photo-web:0.1.1`과 `jeonjw/rapid-photo-web:latest`로 게시
+
+저장소의 **Settings → Secrets and variables → Actions**에 Repository secrets 등록
+
+| Secret | 값 |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | `jeonjw` |
+| `DOCKERHUB_TOKEN` | `jeonjw/rapid-photo-web`에 Read & Write 권한이 있는 Docker Hub 액세스 토큰 |
+
+워크플로우를 커밋·푸시한 후 새 릴리스 태그를 생성하고 푸시
+
+```sh
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+`latest`는 가장 최근에 게시된 릴리스를 가리키며, 전체 스모크 테스트 통과 후 이미지 게시
+
+### 수동 게시
+
 ```sh
 docker login
-export DOCKERHUB_USERNAME=your-dockerhub-id
+export DOCKERHUB_USERNAME=jeonjw
 export VERSION=0.1.0
 
 docker buildx build \
